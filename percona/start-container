@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+service mysql restart
+
+# DB 초기 셋팅
+mysql_set() {
+
+    # root 비밀번호
+	if [ -n "$MYSQL_ROOT_PASSWORD" ]; then
+		mysql --database=mysql <<< "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD' ;"
+	fi
+
+    # 신규 DB 생성
+	if [ -n "$MYSQL_DATABASE" ]; then
+		mysql --database=mysql <<<"CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;"
+	fi
+
+    # 신규 계정 생성
+	if [ -n "$MYSQL_USER" ] && [ -n "$MYSQL_PASSWORD" ]; then
+		mysql --database=mysql <<<"CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD' ;"
+		if [ -n "$MYSQL_DATABASE" ]; then
+			mysql --database=mysql <<<"GRANT ALL ON \`${MYSQL_DATABASE//_/\\_}\`.* TO '$MYSQL_USER'@'%' ;"
+		fi
+	fi
+}
+
+mysql_set
+# DB 초기 셋팅 끝
+
+/bin/bash

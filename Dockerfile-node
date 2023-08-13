@@ -1,0 +1,17 @@
+FROM bizhost/ubuntu20.04_node
+
+LABEL maintainer="bizhost"
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV T_HOSTNAME node
+
+COPY ./.bash_aliases /root/.bash_aliases
+
+# 컨테이너 실행시 실행될 명령어
+COPY ./node/start-container /usr/local/bin/start-container
+RUN chown root:root /usr/local/bin/start-container
+RUN chmod +x /usr/local/bin/start-container
+
+CMD ["bash"]
+ENTRYPOINT ["start-container", "bash"]
+

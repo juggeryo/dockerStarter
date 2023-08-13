@@ -1,0 +1,9 @@
+{
+    "name": "quan_tb-php",
+    "dockerComposeFile": ["../docker-compose.yml"],
+    "service": "php",
+    "shutdownAction": "none",
+    "extensions": ["dbaeumer.vscode-eslint"],
+    "workspaceFolder": "/home/quan_tb",
+    "remoteUser": "quan_tb"
+}

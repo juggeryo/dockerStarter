@@ -1,0 +1,146 @@
+version: '3'
+services:
+    nginx:
+        image: 'zerosnail/${APP_NAME}-nginx'
+        build:
+            context: ./
+            dockerfile: Dockerfile-nginx
+            args :
+                FORWARD_PHP_PORT: '${FORWARD_PHP_PORT:-9000}'
+                APP_NAME: '${APP_NAME}'
+                USER_UID: '${USER_UID}'
+        container_name : "${APP_NAME}-web"
+        env_file: .env
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${APP_SSL_PORT:-443}:443'
+        volumes:
+            # PHP 웹 소스
+            - type: 'bind'
+              source: './bind'
+              target: '/home/${APP_NAME}/bind/'
+            # nginx
+            - type: 'bind'
+              source: './nginx/nginx/'
+              target: '/etc/nginx/'
+            # start-container
+            - type: 'bind'
+              source: './nginx/start-container'
+              target: '/usr/local/bin/start-container'
+        networks:
+            defualt:
+                aliases:
+                - web
+            npm-nw:
+                aliases:
+                - kyj-web
+        depends_on:
+            - php
+            - percona
+            - redis
+        tty: true
+    php:
+        image: 'zerosnail/${APP_NAME}-php'
+        build:
+            context: ./
+            dockerfile: Dockerfile-php
+            args:
+                APP_NAME: '${APP_NAME}'
+                USER_UID: '${USER_UID}'
+        container_name : "${APP_NAME}-php"
+        env_file: .env
+        ports:
+            - '${FORWARD_PHP_PORT:-9000}:9000'
+        volumes:
+            # PHP 웹 소스
+            - type: 'bind'
+              source: './bind'
+              target: '/home/${APP_NAME}/bind'
+            # php.ini
+            - type: 'bind'
+              source: './php/php.ini'
+              target: '/etc/php/8.1/fpm/php.ini'
+            # php-fpm.conf
+            - type: 'bind'
+              source: './php/php-fpm.conf'
+              target: '/etc/php/8.1/fpm/php-fpm.conf'
+            # pool
+            - type: 'bind'
+              source: './php/pool.d'
+              target: '/etc/php/8.1/fpm/pool.d'
+            # start-container
+            - type: 'bind'
+              source: './php/start-container'
+              target: '/usr/local/bin/start-container'
+        networks:
+            defualt:
+                aliases:
+                - php
+        depends_on:
+            - percona
+            - redis
+        tty: true
+    percona:
+        image: 'zerosnail/${APP_NAME}-percona'
+        build:
+            context: ./
+            dockerfile: Dockerfile-percona
+            args:
+                APP_NAME: '${APP_NAME}'
+        container_name : "${APP_NAME}-db"
+        env_file: .env
+        ports:
+            - '${FORWARD_DB_PORT:-3306}:3306'
+        volumes:
+            # mysql
+            - type: 'bind'
+              source: './percona/mysql'
+              target: '/var/lib/mysql'
+            # my.cnf
+            - type: 'bind'
+              source: './percona/my.cnf'
+              target: '/etc/mysql/my.cnf'
+            # start-container
+            - type: 'bind'
+              source: './percona/start-container'
+              target: '/usr/local/bin/start-container'
+        networks:
+            defualt:
+                aliases:
+                - db
+            db-nw:
+                aliases:
+                - kyj-db
+        tty: true
+    redis:
+        image: 'zerosnail/${APP_NAME}-redis'
+        build:
+            context: ./
+            dockerfile: Dockerfile-redis
+            args:
+                APP_NAME: '${APP_NAME}'
+        container_name : "${APP_NAME}-redis"
+        env_file: .env
+        ports:
+            - '${FORWARD_REDIS_PORT:-6379}:6379'
+        volumes:
+            # data
+            - type: 'bind'
+              source: './redis/data'
+              target: '/data'
+            # start-container
+            - type: 'bind'
+              source: './redis/start-container'
+              target: '/usr/local/bin/start-container'
+        networks:
+            defualt:
+                aliases:
+                - redis
+        tty: true
+networks:
+    defualt:
+        driver: bridge
+    npm-nw:
+        external: true
+    db-nw:
+        external: true

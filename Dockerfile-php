@@ -1,0 +1,41 @@
+FROM bizhost/ubuntu20.04_php8.1
+
+LABEL maintainer="bizhost"
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV T_HOSTNAME php
+
+ARG APP_NAME
+ARG USERNAME="${APP_NAME}"
+ARG USER_UID
+ARG USER_GID=$USER_UID
+
+# 사용자 추가
+RUN groupadd --gid $USER_GID $USERNAME
+RUN useradd --shell /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME
+RUN echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME
+RUN chmod 0440 /etc/sudoers.d/$USERNAME
+
+# 디렉토리 기본 생성
+USER $USERNAME
+WORKDIR /home/$USERNAME/
+RUN cd /home/$USERNAME/
+RUN mkdir main \
+    && chmod 755 main \
+    && mkdir product_img \
+    && chmod 755 product_img
+
+USER root
+WORKDIR /root/
+
+# bash_aliases 복사
+COPY ./.bash_aliases /root/.bash_aliases
+COPY ./.bash_aliases /home/$USERNAME/.bash_aliases
+RUN chown $USERNAME:$USERNAME /home/$USERNAME/.bash_aliases 
+
+# 컨테이너 실행시 실행될 명령어
+COPY ./php/start-container /usr/local/bin/start-container
+RUN chmod +x /usr/local/bin/start-container
+
+CMD ["bash"]
+ENTRYPOINT ["start-container", "bash"]

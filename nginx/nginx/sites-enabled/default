@@ -1,0 +1,25 @@
+server {
+	listen 80;
+    server_name dev-main.newticle.com;
+    charset utf-8;
+    root /home/newticle/main/public;
+
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    error_page  500 502 503 504 /50x.html;
+    location = /50x.html {
+        root html;
+    }
+
+    try_files $uri $uri/ /?ref=;
+
+    location ~ \.(php|html|htm)$ {
+        fastcgi_pass php:9000;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+}

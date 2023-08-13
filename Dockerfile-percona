@@ -1,0 +1,17 @@
+FROM bizhost/ubuntu20.04_percona8.0
+
+LABEL maintainer="bizhost"
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV T_HOSTNAME percona
+
+COPY ./.bash_aliases /root/.bash_aliases
+
+WORKDIR /
+
+# 컨테이너 실행시 실행될 명령어
+COPY ./percona/start-container /usr/local/bin/start-container
+RUN chmod +x /usr/local/bin/start-container
+
+ENTRYPOINT ["start-container"]
+
